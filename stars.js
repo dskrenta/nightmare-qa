@@ -6,14 +6,13 @@ const nightmare = Nightmare({
 const path = require('path');
 const config = require(path.join(__dirname, 'config.js'));
 
-console.log(`${config.host}/slideshow/${config.itemid}/?layoutmode=${config.layoutMode}`);
-
 vo(run)(function(err, result) {
   if (err) throw err;
 });
 
 function* run() {
   yield nightmare
+    .viewport(config.windowWidth, config.windowHeight)
     .goto(`${config.host}/slideshow/${config.itemid}/?layoutmode=${config.layoutMode}`);
 
   for (let i = 0; i < config.slides; i++) {
@@ -34,6 +33,10 @@ function* loopThroughSlides(i) {
       });
 
     console.log(value);
+    if (config.screenshots) {
+      let path = `screenshots/${config.itemid}-${i}.png`;
+      yield nightmare.screenshot(path);
+    }
   } else {
     var value = yield nightmare
       .click('.js-next')
@@ -43,18 +46,9 @@ function* loopThroughSlides(i) {
       });
 
     console.log(value);
+    if (config.screenshots) {
+      let path = `screenshots/${config.itemid}-${i}.png`;
+      yield nightmare.screenshot(path);
+    }
   }
 }
-
-/*
-function* run() {
-  var title = yield nightmare
-    .goto('http://harvix.com')
-    .evaluate(function() {
-      return document.title;
-    });
-
-  console.log(title);
-  yield nightmare.end();
-}
-*/
