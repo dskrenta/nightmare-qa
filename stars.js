@@ -1,13 +1,13 @@
 'use strict';
 
+const path = require('path');
+const config = require(path.join(__dirname, 'config.js'));
 const Nightmare = require('nightmare');
 const vo = require('vo');
 const nightmare = Nightmare({
   show: true,
-  openDevTools: true
+  openDevTools: config.dev
 });
-const path = require('path');
-const config = require(path.join(__dirname, 'config.js'));
 
 let numImages = 0;
 

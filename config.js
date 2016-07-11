@@ -6,7 +6,8 @@ const config = {
   slides: 10,
   windowWidth: 1366,
   windowHeight: 768,
-  waitBetweenSlides: 2500
+  waitBetweenSlides: 2500,
+  dev: false
 };
 
 module.exports = config;
