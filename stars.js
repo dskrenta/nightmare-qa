@@ -29,7 +29,7 @@ function *run () {
   }
 
   for (let i = 1; i < numImages; i++) {
-    let cookie = yield getCookie(`${i}image`);
+    let cookie = yield getCookie(`slideshowimage${i}`);
     console.log(cookie);
   }
 
@@ -65,12 +65,12 @@ function *loopThroughSlides (i) {
         });
 
         images.forEach((item, index) => {
-          if (item.src != 'http://static.topixcdn.com/px/images/blank.png') {
+          if (item.src !== 'http://static.topixcdn.com/px/images/blank.png') {
             item.onerror = () => {
-              document.cookie = `${index}image=error`;
+              document.cookie = `slideshowimage${index}=error`;
             }
             item.onload = () => {
-              document.cookie = `${index}image=load`;
+              document.cookie = `slideshowimage${index}=load`;
             }
           }
         });
@@ -108,12 +108,12 @@ function *loopThroughSlides (i) {
         let imagesList = document.querySelectorAll('.js-slide-img');
         let images = Array.from(imagesList);
         images.forEach((item, index) => {
-          if (item.src != 'http://static.topixcdn.com/px/images/blank.png') {
+          if (item.src !== 'http://static.topixcdn.com/px/images/blank.png') {
             item.onerror = () => {
-              document.cookie = `${index}image=error`;
+              document.cookie = `slideshowimage${index}=error`;
             }
             item.onload = () => {
-              document.cookie = `${index}image=load`;
+              document.cookie = `slideshowimage${index}=load`;
             }
           }
         });
