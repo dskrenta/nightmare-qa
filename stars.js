@@ -29,7 +29,7 @@ function *run () {
   }
 
   for (let i = 1; i < numImages; i++) {
-    let cookie = yield getCookie(`slideshowimage${i}`);
+    let cookie = yield *getCookie(`slideshowimage${i}`);
     console.log(cookie);
   }
 
