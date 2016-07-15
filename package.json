@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "nightmare": "^2.5.2",
-    "vo": "^4.0.2"
+    "vo": "^4.0.2",
+    "vorpal": "^1.11.2"
   }
 }
