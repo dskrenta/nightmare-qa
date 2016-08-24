@@ -1,3 +1,4 @@
+'use strict';
 const Nightmare = require('nightmare');
 const vo = require('vo');
 const nightmare = Nightmare({
@@ -16,7 +17,7 @@ function* run() {
     .goto(`${config.host}/slideshow/${config.itemid}/?layoutmode=${config.layoutMode}`);
 
   for (let i = 0; i < config.slides; i++) {
-    var results = yield * loopThroughSlides(i);
+    let results = yield * loopThroughSlides(i);
   }
 
   yield nightmare.end();
@@ -24,12 +25,12 @@ function* run() {
 
 function* loopThroughSlides(i) {
   if (i === 0) {
-    var value = yield nightmare
+    let value = yield nightmare
       .wait('.x-text')
       .click('.x-text')
       .wait(config.waitBetweenSlides)
       .evaluate(function() {
-        return document.title;
+        return document.querySelector('.js-slide-img').src;
       });
 
     console.log(value);
@@ -38,11 +39,13 @@ function* loopThroughSlides(i) {
       yield nightmare.screenshot(path);
     }
   } else {
-    var value = yield nightmare
+    let value = yield nightmare
       .click('.js-next')
       .wait(config.waitBetweenSlides)
       .evaluate(function() {
-        return document.title;
+        return `${document.getElementsByClassName('js-slide-img')[0].src} \n
+        ${document.getElementsByClassName('x-slide-subcaption')[0].innerText} \n 
+        ${document.title} \n`;
       });
 
     console.log(value);
