@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "nightmare": "^2.10.0"
+    "nightmare": "^2.10.0",
+    "vo": "^4.0.2",
+    "vorpal": "^1.11.2"
   }
 }
