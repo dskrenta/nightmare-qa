@@ -7,6 +7,7 @@ tests to run:
 X* track the total elapsed time of the test (we'll have to figure out when it is okay to advance)
 * track the slideshow images that loaded
 * track the caption / subcaption text that loaded
+* capture page events
 
 finally:
 * output success or failure
@@ -38,6 +39,7 @@ class NightmareQA {
       show: this.dev,
       openDevTools: this.dev
     });
+    this.result = {};
 
     this.main().then(result => {
       console.log(result);
@@ -55,41 +57,42 @@ class NightmareQA {
         return `${this.host}/quiz/${this.itemId}/qidx${index + 1}/?layoutmode=${this.layoutMode}`;
       });
 
-      const promises = urls.map((url) => {
-        return this.nightmare
-          .goto(url)
-          .wait(this.waitBetweenSlides)
-          .click('.quiz_answer-item-anim')
-          .wait(this.waitBetweenSlides)
-          .click('.ico-circled-right-arrow-filled')
-          .wait(this.waitBetweenSlides)
-      });
+      const promises = urls.map((url) => this.quizAction(url));
 
       await Promise.all(promises);
       await this.nightmare.end();
 
-      return {
-        elapsedTime: process.hrtime(this.startTime)[0]
-      };
+      this.result.status = true;
     }
     catch (error) {
+      this.result.status = false;
       console.error(error);
+    }
+    finally {
+      this.result.elapsedTime = process.hrtime(this.startTime)[0];
+      return this.result;
     }
   }
 
-  async quizQuestionAction() {
-    try {
-      return await this.nightmare
-        .click('quiz_answer-item-anim')
-        .wait(this.waitBetweenSlides)
-        .click('ico-circled-right-arrow-filled')
-        .wait(this.waitBetweenSlides)
-        .click('ico-circled-right-arrow-filled')
-        .wait(this.waitBetweenSlides)
-    }
-    catch (error) {
-      console.error(error);
-    }
+  async quizAction(url) {
+    const selector = '#questionText';
+
+    await this.nightmare
+      .goto(url)
+      // .wait(selector)
+      .evaluate(function (selector) {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => resolve(document.querySelector(selector).innerText), 2000);
+      })}, selector)
+      .then(function(text) {
+        console.log(text);
+      });
+
+    await this.nightmare
+      .click('.quiz_answer-item-anim')
+      // .wait(this.waitBetweenSlides)
+      .click('.ico-circled-right-arrow-filled')
+      // .wait(this.waitBetweenSlides);
   }
 }
 
