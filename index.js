@@ -55,7 +55,7 @@ class NightmareQA {
         return `${this.host}/quiz/${this.itemId}/qidx${index + 1}/?layoutmode=${this.layoutMode}`;
       });
 
-      const promises = urls.map(async (url) => {
+      const promises = urls.map((url) => {
         return this.nightmare
           .goto(url)
           .wait(this.waitBetweenSlides)
