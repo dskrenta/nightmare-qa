@@ -12,21 +12,6 @@ finally:
 * output success or failure
 */
 
-// slides
-// click x-text to start slideshow
-// click js-next to advance
-// check x-boxed-title on every slide to verify same slideshow
-
-/*
-  QUIZ
-  click x-text to start quiz
-  foreach quiz question
-    click one of quiz_answer-item-anim
-    click ico-circled-right-arrow-filled
-    click ico-circled-right-arrow-filled
-    if x-score exits, exit test
-*/
-
 class NightmareQA {
   constructor({
     host = 'http://stars.topix.com',
@@ -63,22 +48,24 @@ class NightmareQA {
     try {
       await this.nightmare
         .viewport(this.windowWidth, this.windowHeight)
-        .goto(`${this.host}/quiz/${this.itemId}/?layoutmode=${this.layoutMode}`)
-        .wait('.x-text')
-        .click('.x-text')
-        .wait(this.waitBetweenSlides);
+        .goto(`${this.host}/quiz/${this.itemId}/?layoutmode=${this.layoutMode}`);
 
-      for (let i = 0; i < this.slides; i++) {
-        console.log(i);
-        // http://stars.topix.com/quiz/18627/qidx34
-        await this.nightmare
+      const emptyList = Array.apply(null, Array(this.slides));
+      const urls = emptyList.map((val, index) => {
+        return `${this.host}/quiz/${this.itemId}/qidx${index + 1}/?layoutmode=${this.layoutMode}`;
+      });
+
+      const promises = urls.map(async (url) => {
+        return this.nightmare
+          .goto(url)
+          .wait(this.waitBetweenSlides)
           .click('.quiz_answer-item-anim')
-          .wait(2500)
+          .wait(this.waitBetweenSlides)
           .click('.ico-circled-right-arrow-filled')
-          .wait(2500)
-          .click('.ico-circled-right-arrow-filled')
-      }
+          .wait(this.waitBetweenSlides)
+      });
 
+      await Promise.all(promises);
       await this.nightmare.end();
 
       return {
