@@ -7,24 +7,10 @@ tests to run:
 X* track the total elapsed time of the test (we'll have to figure out when it is okay to advance)
 * track the slideshow images that loaded
 * track the caption / subcaption text that loaded
+* capture page events
 
 finally:
 * output success or failure
-*/
-
-// slides
-// click x-text to start slideshow
-// click js-next to advance
-// check x-boxed-title on every slide to verify same slideshow
-
-/*
-  QUIZ
-  click x-text to start quiz
-  foreach quiz question
-    click one of quiz_answer-item-anim
-    click ico-circled-right-arrow-filled
-    click ico-circled-right-arrow-filled
-    if x-score exits, exit test
 */
 
 class NightmareQA {
@@ -33,7 +19,7 @@ class NightmareQA {
     layoutMode = 'prod-active',
     itemId = 18627,
     screenshots = false,
-    slides = 10,
+    slides = 2,
     windowWidth = 1366,
     windowHeight = 768,
     waitBetweenSlides = 2500,
@@ -53,6 +39,7 @@ class NightmareQA {
       show: this.dev,
       openDevTools: this.dev
     });
+    this.result = {};
 
     this.main().then(result => {
       console.log(result);
@@ -64,45 +51,77 @@ class NightmareQA {
       await this.nightmare
         .viewport(this.windowWidth, this.windowHeight)
         .goto(`${this.host}/quiz/${this.itemId}/?layoutmode=${this.layoutMode}`)
-        .wait('.x-text')
-        .click('.x-text')
-        .wait(this.waitBetweenSlides);
+        .evaluate(() => {
+          localStorage.setItem('images', JSON.stringify([]));
+        });
 
-      for (let i = 0; i < this.slides; i++) {
-        console.log(i);
-        // http://stars.topix.com/quiz/18627/qidx34
-        await this.nightmare
-          .click('.quiz_answer-item-anim')
-          .wait(2500)
-          .click('.ico-circled-right-arrow-filled')
-          .wait(2500)
-          .click('.ico-circled-right-arrow-filled')
-      }
+      const emptyList = Array.apply(null, Array(this.slides));
+      const urls = emptyList.map((val, index) => {
+        return `${this.host}/quiz/${this.itemId}/qidx${index + 1}/?layoutmode=${this.layoutMode}`;
+      });
 
-      await this.nightmare.end();
+      const promises = urls.map((url) => this.quizAction(url));
 
-      return {
-        elapsedTime: process.hrtime(this.startTime)[0]
-      };
+      await Promise.all(promises);
+
+      await this.getLocalStorage();
+
+      this.result.status = true;
     }
     catch (error) {
+      this.result.status = false;
       console.error(error);
+    }
+    finally {
+      await this.nightmare.end();
+      this.result.elapsedTime = process.hrtime(this.startTime)[0];
+      return this.result;
     }
   }
 
-  async quizQuestionAction() {
-    try {
-      return await this.nightmare
-        .click('quiz_answer-item-anim')
+  async quizAction(url) {
+    await this.nightmare
+      .goto(url)
+      .wait(this.waitBetweenSlides)
+      .evaluate(() => {
+        // quiz_question-img
+        let image = document.querySelector('.quiz_question-img');
+        let images = JSON.parse(localStorage.getItem('images'));
+        image.onload = () => {
+          images.push({status: 'error'});
+          localStorage.setItem('images', JSON.stringify(images));
+        };
+        image.onerror = () => {
+          images.push({status: 'success'});
+          localStorage.setItem('images', JSON.stringify(images));
+        };
+      })
+      .then(async () => {
+        await this.nightmare
+        .click('.quiz_answer-item-anim')
         .wait(this.waitBetweenSlides)
-        .click('ico-circled-right-arrow-filled')
-        .wait(this.waitBetweenSlides)
-        .click('ico-circled-right-arrow-filled')
-        .wait(this.waitBetweenSlides)
-    }
-    catch (error) {
-      console.error(error);
-    }
+        .click('.ico-circled-right-arrow-filled')
+        .wait(this.waitBetweenSlides);
+      });
+
+    /*
+    await this.nightmare
+      .click('.quiz_answer-item-anim')
+      .wait(this.waitBetweenSlides)
+
+    await this.nightmare
+      .click('.ico-circled-right-arrow-filled')
+      .wait(this.waitBetweenSlides);
+    */
+  }
+
+  async getLocalStorage() {
+    await this.nightmare
+      .evaluate(() => {
+        return localStorage.getItem('images');
+      }).then(result => {
+        console.log(result);
+      });
   }
 }
 
