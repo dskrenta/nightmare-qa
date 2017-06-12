@@ -19,7 +19,7 @@ class NightmareQA {
     layoutMode = 'prod-active',
     itemId = 18627,
     screenshots = false,
-    slides = 10,
+    slides = 2,
     windowWidth = 1366,
     windowHeight = 768,
     waitBetweenSlides = 2500,
@@ -50,7 +50,10 @@ class NightmareQA {
     try {
       await this.nightmare
         .viewport(this.windowWidth, this.windowHeight)
-        .goto(`${this.host}/quiz/${this.itemId}/?layoutmode=${this.layoutMode}`);
+        .goto(`${this.host}/quiz/${this.itemId}/?layoutmode=${this.layoutMode}`)
+        .evaluate(() => {
+          localStorage.setItem('images', JSON.stringify([]));
+        });
 
       const emptyList = Array.apply(null, Array(this.slides));
       const urls = emptyList.map((val, index) => {
@@ -60,7 +63,8 @@ class NightmareQA {
       const promises = urls.map((url) => this.quizAction(url));
 
       await Promise.all(promises);
-      await this.nightmare.end();
+
+      await this.getLocalStorage();
 
       this.result.status = true;
     }
@@ -69,30 +73,55 @@ class NightmareQA {
       console.error(error);
     }
     finally {
+      await this.nightmare.end();
       this.result.elapsedTime = process.hrtime(this.startTime)[0];
       return this.result;
     }
   }
 
   async quizAction(url) {
-    const selector = '#questionText';
-
     await this.nightmare
       .goto(url)
-      // .wait(selector)
-      .evaluate(function (selector) {
-        return new Promise((resolve, reject) => {
-          setTimeout(() => resolve(document.querySelector(selector).innerText), 2000);
-      })}, selector)
-      .then(function(text) {
-        console.log(text);
+      .wait(this.waitBetweenSlides)
+      .evaluate(() => {
+        // quiz_question-img
+        let image = document.querySelector('.quiz_question-img');
+        let images = JSON.parse(localStorage.getItem('images'));
+        image.onload = () => {
+          images.push({status: 'error'});
+          localStorage.setItem('images', JSON.stringify(images));
+        };
+        image.onerror = () => {
+          images.push({status: 'success'});
+          localStorage.setItem('images', JSON.stringify(images));
+        };
+      })
+      .then(async () => {
+        await this.nightmare
+        .click('.quiz_answer-item-anim')
+        .wait(this.waitBetweenSlides)
+        .click('.ico-circled-right-arrow-filled')
+        .wait(this.waitBetweenSlides);
       });
 
+    /*
     await this.nightmare
       .click('.quiz_answer-item-anim')
-      // .wait(this.waitBetweenSlides)
+      .wait(this.waitBetweenSlides)
+
+    await this.nightmare
       .click('.ico-circled-right-arrow-filled')
-      // .wait(this.waitBetweenSlides);
+      .wait(this.waitBetweenSlides);
+    */
+  }
+
+  async getLocalStorage() {
+    await this.nightmare
+      .evaluate(() => {
+        return localStorage.getItem('images');
+      }).then(result => {
+        console.log(result);
+      });
   }
 }
 
